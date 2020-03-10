@@ -233,8 +233,10 @@ void q_reverse(queue_t *q)
 
 #### ***q_sort***
 
+// Mar 3 -> bobble sort method
+
 ```cpp
-void q_sort(queue_t *q)
+void q_bobble_sort(queue_t *q)
 {
     if (!q || !q->head)
         return;
@@ -256,9 +258,145 @@ void q_sort(queue_t *q)
 }
 ```
 
+
+// Mar 6 -> Fix bobble sort method
+
+```cpp
+void q_bobble_sort(queue_t *q)
+{
+    if (!q || !q->head)
+        return;
+
+    for (int i = q_size(q); i > 0; i--) {
+        list_ele_t *prev = NULL, *curr = q->head, *prec = q->head->next;
+        for (int j = 0; j < i - 1; j++) {
+            if (strcasecmp(curr->value, prec->value) > 0) {
+                if (!prev)
+                    q->head = prec;
+                else
+                    prev->next = prec;
+                if (!prec->next)
+                    q->tail = curr;
+
+                list_ele_t *tmp = prec->next;
+                prec->next = curr;
+                curr->next = tmp;
+
+                tmp = prec;
+                prec = curr;
+                curr = tmp;
+            }
+            prev = curr;
+            curr = prec;
+            prec = prec->next;
+        }
+    }
+    return;
+}
+```
+
+// Mar 9 -> 實作 Insertion sort method
+
+```cpp
+void q_sort(queue_t *q)
+{   
+    if (!q || !q->head)
+        return;
+    
+    int i = 0; 
+    list_ele_t *head = q->head;
+    
+    while (head) {
+        int j = 0;
+        bool swap_status = false;
+        list_ele_t *prev = NULL, *curr = q->head, *prec = curr->next,
+                   *tmp = NULL;
+        while (j < i) {
+            if (strcasecmp(head->value, curr->value) < 0 && !swap_status) {
+                tmp = head->next;
+                if (!prev)
+                    q->head = head;
+                else
+                    prev->next = head;
+                if (!prec->next)
+                    q->tail = prec;
+
+                head->next = curr;
+                swap_status = true;
+            }
+            prev = curr;
+            curr = prec;
+            prec = prec->next;
+            ++j;
+        }
+        if (swap_status) {
+            head = prev;
+            prev->next = tmp;
+        }
+        head = head->next;
+        ++i;
+    }
+    return;
+}
+```
+
+// Mar 10 -> 實作 Selection sort
+
+```cpp
+void q_sort(queue_t *q) 
+{
+    if (!q || !q->head)
+        return;
+
+    list_ele_t *head_prev = NULL, *head = q->head, *head_prec = head->next;
+
+    while (head->next) {
+        list_ele_t *min_prev = head_prev, *min_curr = head,
+                   *min_prec = head_prec;
+        list_ele_t *prev = head, *curr = head->next;
+        while (curr) {
+            list_ele_t *prec = curr->next;
+            if (strcasecmp(curr->value, min_curr->value) < 0) {
+                min_prev = prev;
+                min_curr = curr;
+                min_prec = prec;
+            }   
+            prev = curr;
+            curr = prec;
+            prec = prec->next;
+        }   
+
+        if (!head_prev)
+            q->head = min_curr;
+        else
+            head_prev->next = min_curr;
+
+        if (!min_prec)
+            q->tail = head;
+
+        if (&min_curr->value == &head_prec->value)
+            min_curr->next = head;
+        else
+            min_curr->next = head_prec;
+
+        if (&head->value == &min_prev->value)
+            head_prec = head;
+        else
+            min_prev->next = head;
+        head->next = min_prec;
+
+        head = min_curr;
+        head_prev = head;
+        head = head_prec;
+        head_prec = head_prec->next;
+    }
+    return;
+}
+```
+
 ## make test評分
 
-// Mar 3 -> make test
+// Mar 3 -> bobble sort make test
 
 ```
 ---	Trace		Points
@@ -330,4 +468,153 @@ Probably constant time
 Probably constant time
 ---	trace-17-complexity	5/5
 ---	TOTAL		88/100
+```
+
+// Mar 6 -> Fix bobble sort make test
+
+```
+
+```
+
+// Mar 9 -> Insertion sort in make test
+
+```
+---    Trace        Points
++++ TESTING trace trace-01-ops:
+# Test of insert_head and remove_head
+---    trace-01-ops    6/6
++++ TESTING trace trace-02-ops:
+# Test of insert_head, insert_tail, and remove_head
+---    trace-02-ops    6/6
++++ TESTING trace trace-03-ops:
+# Test of insert_head, insert_tail, reverse, and remove_head
+---    trace-03-ops    6/6
++++ TESTING trace trace-04-ops:
+# Test of insert_head, insert_tail, size, and sort
+---    trace-04-ops    6/6
++++ TESTING trace trace-05-ops:
+# Test of insert_head, insert_tail, remove_head, reverse, size, and sort
+---    trace-05-ops    5/5
++++ TESTING trace trace-06-string:
+# Test of truncated strings
+---    trace-06-string    6/6
++++ TESTING trace trace-07-robust:
+# Test operations on NULL queue
+---    trace-07-robust    6/6
++++ TESTING trace trace-08-robust:
+# Test operations on empty queue
+---    trace-08-robust    6/6
++++ TESTING trace trace-09-robust:
+# Test remove_head with NULL argument
+---    trace-09-robust    6/6
++++ TESTING trace trace-10-malloc:
+# Test of malloc failure on new
+---    trace-10-malloc    6/6
++++ TESTING trace trace-11-malloc:
+# Test of malloc failure on insert_head
+---    trace-11-malloc    6/6
++++ TESTING trace trace-12-malloc:
+# Test of malloc failure on insert_tail
+---    trace-12-malloc    6/6
++++ TESTING trace trace-13-perf:
+# Test performance of insert_tail
+---    trace-13-perf    6/6
++++ TESTING trace trace-14-perf:
+# Test performance of size
+---    trace-14-perf    6/6
++++ TESTING trace trace-15-perf:
+# Test performance of insert_tail, size, reverse, and sort
+ERROR: Time limit exceeded.  Either you are in an infinite loop, or your code is too inefficient
+ERROR: Not sorted in ascending order
+---    trace-15-perf    0/6
++++ TESTING trace trace-16-perf:
+# Test performance of sort with random and descending orders
+# 10000: all correct sorting algorithms are expected pass
+# 50000: sorting algorithms with O(n^2) time complexity are expected failed
+# 100000: sorting algorithms with O(nlogn) time complexity are expected pass
+ERROR: Time limit exceeded.  Either you are in an infinite loop, or your code is too inefficient
+ERROR: Not sorted in ascending order
+Segmentation fault occurred.  You dereferenced a NULL or invalid pointer
+---    trace-16-perf    0/6
++++ TESTING trace trace-17-complexity:
+# Test if q_insert_tail and q_size is constant time complexity
+Probably constant time
+Probably constant time
+---    trace-17-complexity    5/5
+---    TOTAL        88/100
+```
+
+// Mar 10 -> selection sort in make test
+
+```
+---    Trace        Points
++++ TESTING trace trace-01-ops:
+# Test of insert_head and remove_head
+---    trace-01-ops    6/6
++++ TESTING trace trace-02-ops:
+# Test of insert_head, insert_tail, and remove_head
+---    trace-02-ops    6/6
++++ TESTING trace trace-03-ops:
+# Test of insert_head, insert_tail, reverse, and remove_head
+---    trace-03-ops    6/6
++++ TESTING trace trace-04-ops:
+# Test of insert_head, insert_tail, size, and sort
+---    trace-04-ops    6/6
++++ TESTING trace trace-05-ops:
+# Test of insert_head, insert_tail, remove_head, reverse, size, and sort
+---    trace-05-ops    5/5
++++ TESTING trace trace-06-string:
+# Test of truncated strings
+---    trace-06-string    6/6
++++ TESTING trace trace-07-robust:
+# Test operations on NULL queue
+---    trace-07-robust    6/6
++++ TESTING trace trace-08-robust:
+# Test operations on empty queue
+---    trace-08-robust    6/6
++++ TESTING trace trace-09-robust:
+# Test remove_head with NULL argument
+---    trace-09-robust    6/6
++++ TESTING trace trace-10-malloc:
+# Test of malloc failure on new
+---    trace-10-malloc    6/6
++++ TESTING trace trace-11-malloc:
+# Test of malloc failure on insert_head
+---    trace-11-malloc    6/6
++++ TESTING trace trace-12-malloc:
+# Test of malloc failure on insert_tail
+---    trace-12-malloc    6/6
++++ TESTING trace trace-13-perf:
+# Test performance of insert_tail
+---    trace-13-perf    6/6
++++ TESTING trace trace-14-perf:
+# Test performance of size
+---    trace-14-perf    6/6
++++ TESTING trace trace-15-perf:
+# Test performance of insert_tail, size, reverse, and sort
+ERROR: Time limit exceeded.  Either you are in an infinite loop, or your code is too inefficient
+ERROR: Not sorted in ascending order
+---    trace-15-perf    0/6
++++ TESTING trace trace-16-perf:
+# Test performance of sort with random and descending orders
+# 10000: all correct sorting algorithms are expected pass
+# 50000: sorting algorithms with O(n^2) time complexity are expected failed
+# 100000: sorting algorithms with O(nlogn) time complexity are expected pass
+ERROR: Time limit exceeded.  Either you are in an infinite loop, or your code is too inefficient
+ERROR: Time limit exceeded.  Either you are in an infinite loop, or your code is too inefficient
+ERROR: Not sorted in ascending order
+ERROR: Time limit exceeded.  Either you are in an infinite loop, or your code is too inefficient
+ERROR: Not sorted in ascending order
+ERROR: Time limit exceeded.  Either you are in an infinite loop, or your code is too inefficient
+ERROR: Not sorted in ascending order
+ERROR: Time limit exceeded.  Either you are in an infinite loop, or your code is too inefficient
+ERROR: Not sorted in ascending order
+Error limit exceeded.  Stopping command execution
+---    trace-16-perf    0/6
++++ TESTING trace trace-17-complexity:
+# Test if q_insert_tail and q_size is constant time complexity
+Probably constant time
+Probably constant time
+---    trace-17-complexity    5/5
+---    TOTAL        88/100
 ```
